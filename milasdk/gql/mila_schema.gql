@@ -1,0 +1,1136 @@
+enum AggregateFunction {
+  Mean
+  Max
+  Min
+  Last
+}
+
+input AggregateWindowInput {
+  range: RangeInput!
+  every: DurationInput!
+  fn: AggregateFunction!
+}
+
+type AggregatedAlerts {
+  current: [CurrentAlert!]!
+  thisWeek: [DailyAlert!]!
+  thisMonth: [MonthlyAlert!]!
+}
+
+"""
+
+"""
+scalar AlertId
+
+enum AlertKind {
+  IndoorAqi
+  OutdoorAqi
+  Co
+  Co2
+  Voc
+  Humidity
+  Safeguard
+  Placeholder
+  Mold
+  Cooking
+  PerfectAir
+  Weirdness
+  TurndownMode
+  SleepMode
+  HousekeeperMode
+  QuietMode
+  WhitenoiseMode
+  PowerSaverMode
+  SleepAnalysis
+  Pollen
+  Wildfire
+  Smoke
+}
+
+type Appliance {
+  id: MacAddress!
+  room: Room!
+  location: Location!
+  name: String
+  state: ApplianceState
+  smartModes: SmartModes!
+  filter: ApplianceFilter
+  sensor(kind: ApplianceSensorKind!): ApplianceSensor!
+  sensors(kinds: [ApplianceSensorKind!]!): [ApplianceSensor!]!
+}
+
+type ApplianceFilter {
+  kind: FilterKind!
+  daysLeft: Int
+  installedAt: EpochSecond!
+  calibratedAt: EpochSecond
+}
+
+enum ApplianceMode {
+  Automagic
+  Sleep
+  Housekeeper
+  DeepClean
+  Quiet
+  Turndown
+  WhiteNoise
+  Quarantine
+  Manual
+  Safeguard
+  PowerSaver
+}
+
+type ApplianceSensor {
+  kind: ApplianceSensorKind
+  aggregateWindow(input: AggregateWindowInput!): [InstantValue!]!
+  latest(precision: Duration!): InstantValue
+}
+
+enum ApplianceSensorKind {
+  Ach
+  FanSpeed
+  Ttc
+  Aqi
+  Pm1
+  Pm2_5
+  Pm10
+  Voc
+  Humidity
+  Temperature
+  Co2
+  Co
+  PressureMax
+  LoadingMg
+}
+
+type ApplianceState {
+  firmware: Firmware!
+  wifiRssi: Int!
+  rawMode: Int
+  modes: [ApplianceMode!]
+
+  """
+  `null` value means that an appliance is offline
+  """
+  actualMode: ApplianceMode
+}
+
+"""
+The innput type of ApplyNotificationSettingsInput
+"""
+input ApplyNotificationSettingsInput {
+  """
+  The value for the indoor AQI notifications setting.
+  """
+  indoorAqi: NotificationSettingValue
+
+  """
+  The value for the outdoor AQI notifications setting.
+  """
+  outdoorAqi: NotificationSettingValue
+
+  """
+  The value for the CO notifications setting.
+  """
+  co: NotificationSettingValue
+
+  """
+  The value for the CO2 notifications setting.
+  """
+  co2: NotificationSettingValue
+
+  """
+  The value for the VOC notifications setting.
+  """
+  voc: NotificationSettingValue
+
+  """
+  The value for the humidity notifications setting.
+  """
+  humidity: NotificationSettingValue
+
+  """
+  The value for the safeguard notifications setting.
+  """
+  safeguard: NotificationSettingValue
+
+  """
+  The value for the placeholder notifications setting.
+  """
+  placeholder: NotificationSettingValue
+
+  """
+  The value for the mold notifications setting.
+  """
+  mold: NotificationSettingValue
+
+  """
+  The value for the cooking notifications setting.
+  """
+  cooking: NotificationSettingValue
+
+  """
+  The value for the weirdness notifications setting.
+  """
+  weirdness: NotificationSettingValue
+
+  """
+  The value for the queit notifications setting.
+  """
+  quiet: NotificationSettingValue
+
+  """
+  The value for the housekeeper notifications setting.
+  """
+  housekeeper: NotificationSettingValue
+
+  """
+  The value for the turndown notifications setting.
+  """
+  turndown: NotificationSettingValue
+
+  """
+  The value for the sleep notifications setting.
+  """
+  sleep: NotificationSettingValue
+
+  """
+  The value for the whitenoise notifications setting.
+  """
+  whitenoise: NotificationSettingValue
+
+  """
+  The value for the powersaver notifications setting.
+  """
+  powerSaver: NotificationSettingValue
+
+  """
+  The value for the sleep analysis notifications setting.
+  """
+  sleepAnalysis: NotificationSettingValue
+
+  """
+  The value for the perfect air notifications setting.
+  """
+  perfectAir: NotificationSettingValue
+
+  """
+  The value for the pollen notifications setting.
+  """
+  pollen: NotificationSettingValue
+
+  """
+  The value for the smoke notifications setting.
+  """
+  smoke: NotificationSettingValue
+}
+
+type Bedtime {
+  localStart: LocalTime!
+  localEnd: LocalTime!
+}
+
+type ChildLockMode {
+  isEnabled: Boolean!
+}
+
+type Co2Alert {
+  co2: Int!
+  id: AlertId!
+  applianceId: MacAddress!
+  triggeredAt: EpochSecond!
+}
+
+type CoAlert {
+  co: Int!
+  id: AlertId!
+  applianceId: MacAddress!
+  triggeredAt: EpochSecond!
+}
+
+type CookingAlert {
+  deepCleanMinutes: Int!
+  id: AlertId!
+  applianceId: MacAddress!
+  triggeredAt: EpochSecond!
+}
+
+input CreateLocationAddressInput {
+  address: String!
+  city: String!
+  country: String!
+  locale: String!
+  point: LatLngInput!
+}
+
+input CreateLocationInput {
+  environmentKind: EnvironmentKind!
+  homeKind: HomeKind!
+  houseBedrooms: HouseBedrooms!
+  houseSize: HouseSize!
+  houseAge: HouseAge!
+  timezone: String!
+}
+
+input CreateRoomInput {
+  locationId: ID!
+  kind: RoomKind!
+  nightStart: LocalTime!
+  nightEnd: LocalTime!
+}
+
+union CurrentAlert =
+    IndoorAqiAlert
+  | OutdoorAqiAlert
+  | PollenAlert
+  | CoAlert
+  | Co2Alert
+  | VocAlert
+  | HumidityAlert
+  | MoldAlert
+  | PlaceholderAlert
+  | CookingAlert
+  | PerfectAirAlert
+  | QuietModeAlert
+  | HousekeeperModeAlert
+  | TurndownModeAlert
+  | WhitenoiseModeAlert
+  | WeirdnessAlert
+  | SafeguardAlert
+  | SleepModeAlert
+  | PowerSaverModeAlert
+  | SleepAnalysisAlert
+  | WildfireAlert
+  | SmokeAlert
+  | OpenDoorAlert
+
+union DailyAlert =
+    DailyIndoorAqiAlert
+  | DailyOutdoorAqiAlert
+  | DailyPollenAlert
+  | DailyCoAlert
+  | DailyCo2Alert
+  | DailyVocAlert
+  | DailyHumidityAlert
+  | DailyPerfectAirAlert
+
+type DailyCo2Alert {
+  co2: Int!
+  id: AlertId!
+  applianceId: MacAddress!
+  triggeredAt: EpochSecond!
+  dismissedAt: EpochSecond!
+}
+
+type DailyCoAlert {
+  co: Int!
+  id: AlertId!
+  applianceId: MacAddress!
+  triggeredAt: EpochSecond!
+  dismissedAt: EpochSecond!
+}
+
+type DailyHumidityAlert {
+  humidity: Int!
+  id: AlertId!
+  applianceId: MacAddress!
+  triggeredAt: EpochSecond!
+  dismissedAt: EpochSecond!
+}
+
+type DailyIndoorAqiAlert {
+  aqi: Int!
+  id: AlertId!
+  applianceId: MacAddress!
+  triggeredAt: EpochSecond!
+  dismissedAt: EpochSecond!
+}
+
+type DailyOutdoorAqiAlert {
+  aqi: Int!
+  id: AlertId!
+  applianceId: MacAddress!
+  triggeredAt: EpochSecond!
+  dismissedAt: EpochSecond!
+}
+
+type DailyPerfectAirAlert {
+  hours: Int!
+  id: AlertId!
+  applianceId: MacAddress!
+  triggeredAt: EpochSecond!
+  dismissedAt: EpochSecond!
+}
+
+type DailyPollenAlert {
+  status: PollenStatus!
+  station: PollenStation!
+  id: AlertId!
+  applianceId: MacAddress!
+  triggeredAt: EpochSecond!
+  dismissedAt: EpochSecond!
+}
+
+type DailyPollenStatus {
+  date: Date!
+  status: PollenStatus!
+}
+
+type DailyVocAlert {
+  voc: Int!
+  id: AlertId!
+  applianceId: MacAddress!
+  triggeredAt: EpochSecond!
+  dismissedAt: EpochSecond!
+}
+
+"""
+An ISO-8601 encoded date string in format "yyyy-MM-dd". For instance, "2021-04-12".
+"""
+scalar Date
+
+type DateValue {
+  date: Date!
+  value: Float
+}
+
+type DeepCleanResponse {
+  timeToReachTargetAch: Int
+}
+
+input Duration {
+  value: Int!
+  unit: TimeUnit!
+}
+
+input DurationInput {
+  value: Int!
+  unit: TimeUnit!
+}
+
+enum EnvironmentKind {
+  Urban
+  Suburban
+  Rural
+}
+
+"""
+The unix time stamp. The number of seconds between a particular instant and the Unix Epoch of 1970-01-01T00:00:00Z.
+"""
+scalar EpochSecond
+
+enum FanMode {
+  Lowest
+  Low
+  Medium
+  High
+  Highest
+}
+
+enum FilterKind {
+  MamaToBe
+  BasicBreather
+  BigSneeze
+  HomeWrecker
+  CritterCuddler
+  Overreactor
+  RookieParent
+}
+
+type Firmware {
+  version: String!
+  hash: String!
+}
+
+type GeoValue {
+  point: LatLng!
+  value: Float
+}
+
+enum HomeKind {
+  House
+  Apartment
+}
+
+enum HouseAge {
+  Old
+  New
+}
+
+enum HouseBedrooms {
+  One
+  Two
+  Three
+  Four
+  FiveOrMore
+}
+
+enum HouseSize {
+  Large
+  Medium
+  Small
+}
+
+type HousekeeperMode {
+  isEnabled: Boolean!
+}
+
+type HousekeeperModeAlert {
+  id: AlertId!
+  applianceId: MacAddress!
+  triggeredAt: EpochSecond!
+}
+
+type HumidityAlert {
+  humidity: Int!
+  id: AlertId!
+  applianceId: MacAddress!
+  triggeredAt: EpochSecond!
+}
+
+type IndoorAqiAlert {
+  aqi: Int!
+  id: AlertId!
+  applianceId: MacAddress!
+  triggeredAt: EpochSecond!
+}
+
+type InstantValue {
+  instant: EpochSecond!
+  value: Float
+}
+
+type LatLng {
+  lat: Float!
+  lon: Float!
+}
+
+input LatLngInput {
+  lat: Float!
+  lon: Float!
+}
+
+"""
+An ISO-8601 encoded time string in format "HH:mm". For instance, "17:02".
+"""
+scalar LocalTime
+
+type Location {
+  id: ID!
+  address: LocationAddress!
+  outdoorStation: OutdoorStation!
+  pollenStation: PollenStation
+  nearestOutdoorStations: [OutdoorStation!]!
+  rooms: [Room!]!
+  timezone: String!
+  environmentKind: EnvironmentKind!
+  homeKind: HomeKind!
+  houseSize: HouseSize!
+  houseAge: HouseAge!
+  houseBedrooms: HouseBedrooms!
+}
+
+type LocationAddress {
+  address: String
+  city: String
+  country: String
+  point: LatLng!
+}
+
+"""
+
+"""
+scalar MacAddress
+
+type MoldAlert {
+  temperature: Int!
+  humidity: Int!
+  daysToMold: Int!
+  id: AlertId!
+  applianceId: MacAddress!
+  triggeredAt: EpochSecond!
+}
+
+union MonthlyAlert =
+    MonthlyIndoorAqiAlert
+  | MonthlyOutdoorAqiAlert
+  | MonthlyCo2Alert
+  | MonthlyCoAlert
+  | MonthlyVocAlert
+  | MonthlyHumidityAlert
+
+type MonthlyCo2Alert {
+  count: Int!
+  date: Date!
+  applianceId: MacAddress!
+}
+
+type MonthlyCoAlert {
+  count: Int!
+  date: Date!
+  applianceId: MacAddress!
+}
+
+type MonthlyHumidityAlert {
+  count: Int!
+  date: Date!
+  applianceId: MacAddress!
+}
+
+type MonthlyIndoorAqiAlert {
+  count: Int!
+  date: Date!
+  applianceId: MacAddress!
+}
+
+type MonthlyOutdoorAqiAlert {
+  count: Int!
+  date: Date!
+  applianceId: MacAddress!
+}
+
+type MonthlyVocAlert {
+  count: Int!
+  date: Date!
+  applianceId: MacAddress!
+}
+
+type Mutation {
+  applySoundsConfig(
+    applianceId: MacAddress!
+    soundsConfig: SoundsConfig!
+  ): Appliance!
+  applyLocalBedtime(
+    applianceId: MacAddress!
+    localStart: LocalTime!
+    localEnd: LocalTime!
+  ): Appliance!
+  applyQuietMode(applianceId: MacAddress!, isEnabled: Boolean!): Appliance!
+  applyHousekeeperMode(
+    applianceId: MacAddress!
+    isEnabled: Boolean!
+  ): Appliance!
+  applyQuarantineMode(applianceId: MacAddress!, isEnabled: Boolean!): Appliance!
+  applySleepMode(
+    applianceId: MacAddress!
+    isEnabled: Boolean!
+    fanMode: FanMode!
+  ): Appliance!
+  applyTurndownMode(
+    applianceId: MacAddress!
+    isEnabled: Boolean!
+    fanMode: FanMode!
+  ): Appliance!
+  applyWhitenoiseMode(
+    applianceId: MacAddress!
+    isEnabled: Boolean!
+    fanMode: FanMode!
+  ): Appliance!
+  applyChildLockMode(applianceId: MacAddress!, isEnabled: Boolean!): Appliance!
+  applyPowerSaverMode(applianceId: MacAddress!, isEnabled: Boolean!): Appliance!
+  startDeepClean(
+    applianceId: MacAddress!
+    targetAchToReach: Float!
+  ): DeepCleanResponse
+  applyFilterKind(applianceId: MacAddress!, filterKind: FilterKind!): Appliance!
+  applyPushNotificationsToken(
+    firebaseToken: String
+    appVersion: String
+  ): Boolean!
+  createLocation(
+    location: CreateLocationInput!
+    locationAddress: CreateLocationAddressInput!
+  ): Location!
+  updateLocation(input: UpdateLocationInput!): Location!
+  updateLocationAddress(input: UpdateLocationAddressInput!): Location!
+  createRoom(input: CreateRoomInput!): Room!
+  updateRoom(input: UpdateRoomInput!): Room!
+  deleteRoom(roomId: ID!): Location!
+  pairAppliance(input: PairApplianceInput!): Appliance!
+  applyPreferredOutdoorStation(
+    locationId: ID!
+    stationId: OutdoorStationId!
+  ): OutdoorStation!
+  reportOutdoorStation(
+    stationId: OutdoorStationId!
+    reportReason: StationReportReason!
+  ): OutdoorStation!
+  resetApplianceSensor(
+    applianceId: MacAddress!
+    sensor: ResettableApplianceSensor!
+  ): Appliance!
+  calibrateFilter(applianceId: MacAddress!): Appliance!
+  applyRoomAutomagicMode(roomId: ID!): Room!
+
+  """
+  `fanSpeed` is measured in range [0..100], where
+  0 means the minimal speed (about 600 RPM)
+  100 means the maximum speed (about 2000 RPM)
+  null means turn off the fan
+  """
+  applyRoomManualMode(roomId: ID!, fanSpeed: Int, targetAqi: Int!): Room!
+  forceRoomData(roomId: ID!): Room!
+  pausePushNotifications(alertKind: AlertKind!, until: EpochSecond!): Boolean!
+
+  """
+  Update the setting to restrict notifications to only allowed by owner.
+  """
+  applyNotificationSettings(
+    input: ApplyNotificationSettingsInput!
+  ): NotificationSettings
+}
+
+"""
+The possible values for the notification setting.
+"""
+enum NotificationSettingValue {
+  """
+  The setting is disabled for the owner.
+  """
+  Disabled
+
+  """
+  The setting is enabled for the owner.
+  """
+  Enabled
+}
+
+"""
+The setting to restrict notifications to only allowed by owner.
+"""
+type NotificationSettings {
+  """
+  The value for the indoor AQI notifications setting.
+  """
+  indoorAqi: NotificationSettingValue!
+
+  """
+  The value for the outdoor AQI notifications setting.
+  """
+  outdoorAqi: NotificationSettingValue!
+
+  """
+  The value for the CO notifications setting.
+  """
+  co: NotificationSettingValue!
+
+  """
+  The value for the CO2 notifications setting.
+  """
+  co2: NotificationSettingValue!
+
+  """
+  The value for the VOC notifications setting.
+  """
+  voc: NotificationSettingValue!
+
+  """
+  The value for the humidity notifications setting.
+  """
+  humidity: NotificationSettingValue!
+
+  """
+  The value for the safeguard notifications setting.
+  """
+  safeguard: NotificationSettingValue!
+
+  """
+  The value for the placeholder notifications setting.
+  """
+  placeholder: NotificationSettingValue!
+
+  """
+  The value for the mold notifications setting.
+  """
+  mold: NotificationSettingValue!
+
+  """
+  The value for the cooking notifications setting.
+  """
+  cooking: NotificationSettingValue!
+
+  """
+  The value for the weirdness notifications setting.
+  """
+  weirdness: NotificationSettingValue!
+
+  """
+  The value for the quiet notifications setting.
+  """
+  quiet: NotificationSettingValue!
+
+  """
+  The value for the housekeeper notifications setting.
+  """
+  housekeeper: NotificationSettingValue!
+
+  """
+  The value for the turndown notifications setting.
+  """
+  turndown: NotificationSettingValue!
+
+  """
+  The value for the sleep notifications setting.
+  """
+  sleep: NotificationSettingValue!
+
+  """
+  The value for the whitenoise notifications setting.
+  """
+  whitenoise: NotificationSettingValue!
+
+  """
+  The value for the powersaver notifications setting.
+  """
+  powerSaver: NotificationSettingValue!
+
+  """
+  The value for the sleep analysis notifications setting.
+  """
+  sleepAnalysis: NotificationSettingValue!
+
+  """
+  The value for the perfect air notifications setting.
+  """
+  perfectAir: NotificationSettingValue!
+
+  """
+  The value for the pollen notifications setting.
+  """
+  pollen: NotificationSettingValue!
+
+  """
+  The value for the smoke notifications setting.
+  """
+  smoke: NotificationSettingValue!
+}
+
+type OpenDoorAlert {
+  id: AlertId!
+  applianceId: MacAddress!
+  triggeredAt: EpochSecond!
+}
+
+type OutdoorAqiAlert {
+  aqi: Int!
+  id: AlertId!
+  applianceId: MacAddress!
+  triggeredAt: EpochSecond!
+}
+
+type OutdoorStation {
+  id: OutdoorStationId!
+  name: String!
+  point: LatLng!
+  sensor(kind: OutdoorStationSensorKind!): OutdoorStationSensor!
+}
+
+"""
+
+"""
+scalar OutdoorStationId
+
+type OutdoorStationSensor {
+  kind: OutdoorStationSensorKind
+  aggregateWindow(input: AggregateWindowInput!): [InstantValue!]!
+  latest(precision: Duration): InstantValue
+}
+
+enum OutdoorStationSensorKind {
+  Pm2_5
+}
+
+type Owner {
+  profile: Profile!
+  appliance(applianceId: MacAddress!): Appliance!
+  appliances: [Appliance!]!
+  alerts(date: Date): AggregatedAlerts!
+  pushNotificationsTokens: [PushNotificationsToken!]!
+
+  """
+  The setting to restrict notifications to only allowed by owner.
+  """
+  notificationSettings: NotificationSettings!
+  locations: [Location!]!
+}
+
+input PairApplianceInput {
+  roomId: ID!
+  applianceId: MacAddress!
+}
+
+type PerfectAirAlert {
+  hours: Int!
+
+  """
+  The total hours of perfect air for last 4 days in the folloing format: [today, 1 day ago, 2 days ago, 3 days ago].
+  """
+  dailyHours: [Int!]!
+  id: AlertId!
+  applianceId: MacAddress!
+  triggeredAt: EpochSecond!
+}
+
+type PlaceholderAlert {
+  variationIndex: Int!
+  id: AlertId!
+  applianceId: MacAddress!
+  triggeredAt: EpochSecond!
+}
+
+type PollenAlert {
+  status: PollenStatus!
+  station: PollenStation!
+  id: AlertId!
+  applianceId: MacAddress!
+  triggeredAt: EpochSecond!
+}
+
+enum PollenIndex {
+  VeryHigh
+  High
+  Moderate
+  Low
+  None
+}
+
+type PollenStation {
+  id: PollenStationId!
+  name: String!
+  aggregateWindow(input: AggregateWindowInput!): [DailyPollenStatus!]!
+}
+
+"""
+
+"""
+scalar PollenStationId
+
+type PollenStatus {
+  trees: PollenIndex
+  weeds: PollenIndex
+  grass: PollenIndex
+  mold: PollenIndex
+}
+
+type PowerSaverMode {
+  isEnabled: Boolean!
+}
+
+type PowerSaverModeAlert {
+  id: AlertId!
+  applianceId: MacAddress!
+  triggeredAt: EpochSecond!
+}
+
+type Profile {
+  email: String!
+  firstName: String!
+  lastName: String!
+}
+
+type PushNotificationsToken {
+  firebaseToken: String!
+  appVersion: String!
+}
+
+type QuarantineMode {
+  isEnabled: Boolean!
+}
+
+type Query {
+  owner: Owner!
+  smoke: Smoke!
+}
+
+type QuietMode {
+  isEnabled: Boolean!
+}
+
+type QuietModeAlert {
+  id: AlertId!
+  applianceId: MacAddress!
+  triggeredAt: EpochSecond!
+}
+
+input RangeInput {
+  start: EpochSecond!
+  stop: EpochSecond!
+}
+
+enum ResettableApplianceSensor {
+  Co
+  Voc
+}
+
+type Room {
+  id: ID!
+  kind: RoomKind!
+  name: String
+  size: Int!
+  bedtime: Bedtime!
+  soundsConfig: SoundsConfig!
+  sensor(kind: ApplianceSensorKind!): ApplianceSensor!
+  appliances: [Appliance!]!
+}
+
+enum RoomKind {
+  LivingRoom
+  Kitchen
+  Laundry
+  HomeOffice
+  Entry
+  TvRoom
+  MainBedroom
+  KidsBedroom
+  GuestBedroom
+}
+
+type SafeguardAlert {
+  ttcError: Int!
+  id: AlertId!
+  applianceId: MacAddress!
+  triggeredAt: EpochSecond!
+}
+
+type SleepAnalysisAlert {
+  """
+  Mean AQI values grouped by 15 minutes for bedtime
+  """
+  aqis: [Int]!
+  id: AlertId!
+  applianceId: MacAddress!
+  triggeredAt: EpochSecond!
+}
+
+type SleepMode {
+  isEnabled: Boolean!
+  fanMode: FanMode!
+}
+
+type SleepModeAlert {
+  id: AlertId!
+  applianceId: MacAddress!
+  triggeredAt: EpochSecond!
+}
+
+type SmartModes {
+  quiet: QuietMode!
+  housekeeper: HousekeeperMode!
+  quarantine: QuarantineMode!
+  sleep: SleepMode!
+  turndown: TurndownMode!
+  whitenoise: WhitenoiseMode!
+  powerSaver: PowerSaverMode!
+  childLock: ChildLockMode!
+}
+
+type Smoke {
+  forecast(lat: Float!, lon: Float!, radiusInMiles: Int!): [GeoValue!]!
+}
+
+type SmokeAlert {
+  point: LatLng!
+  id: AlertId!
+}
+
+enum SoundsConfig {
+  Enabled
+  DaytimeOnly
+  Disabled
+}
+
+enum StationReportReason {
+  NoValues
+  WrongValues
+  ShowsNull
+}
+
+type Subscription {
+  appliance(applianceId: MacAddress!): Appliance!
+}
+
+enum TimeUnit {
+  """
+      Second,
+  """
+  Minute
+  Hour
+  Day
+  Month
+  Week
+}
+
+type TurndownMode {
+  isEnabled: Boolean!
+  fanMode: FanMode!
+}
+
+type TurndownModeAlert {
+  id: AlertId!
+  applianceId: MacAddress!
+  triggeredAt: EpochSecond!
+}
+
+input UpdateLocationAddressInput {
+  locationId: ID!
+  address: String!
+  city: String!
+  country: String!
+  locale: String!
+  point: LatLngInput!
+}
+
+input UpdateLocationInput {
+  locationId: ID!
+  environmentKind: EnvironmentKind
+  homeKind: HomeKind
+  houseBedrooms: HouseBedrooms
+  houseSize: HouseSize
+  houseAge: HouseAge
+}
+
+input UpdateRoomInput {
+  roomId: ID!
+  kind: RoomKind
+  name: String
+  nightStart: LocalTime
+  nightEnd: LocalTime
+}
+
+type VocAlert {
+  voc: Int!
+  id: AlertId!
+  applianceId: MacAddress!
+  triggeredAt: EpochSecond!
+}
+
+type WeirdnessAlert {
+  pmConf: Float!
+  pm25: Int!
+  pm25Raw: Int!
+  id: AlertId!
+  applianceId: MacAddress!
+  triggeredAt: EpochSecond!
+}
+
+type WhitenoiseMode {
+  isEnabled: Boolean!
+  fanMode: FanMode!
+}
+
+type WhitenoiseModeAlert {
+  id: AlertId!
+  applianceId: MacAddress!
+  triggeredAt: EpochSecond!
+}
+
+type WildfireAlert {
+  title: String!
+  point: LatLng!
+  sizeInAcres: Int
+  description: String
+  contained: Int
+  publishedAt: EpochSecond!
+  updatedAt: EpochSecond
+  id: AlertId!
+}
