@@ -8,7 +8,7 @@ from typing import Any
 from aiohttp import ClientError, ClientResponse, ClientSession
 
 from ..const import AUTH_HEADER
-from ..exceptions import ApiError
+from ..exceptions import MilaError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ class AbstractAsyncSession(ABC):
         try:
             access_token = await self.async_get_access_token()
         except ClientError as err:
-            raise ApiError(f"Access token failure: {err}") from err
+            raise MilaError(f"Access token failure: {err}") from err
         headers = {AUTH_HEADER: f"Bearer {access_token}"}
 
         resp : ClientResponse = None

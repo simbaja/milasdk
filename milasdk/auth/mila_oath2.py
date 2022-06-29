@@ -8,6 +8,7 @@ from typing import Callable, Optional, Type
 from oauthlib.oauth2 import LegacyApplicationClient
 from async_oauthlib import OAuth2Session
 from milasdk.const import AUTH_CLIENT_ID, AUTH_OIDC_TOKEN_ENDPOINT, AUTH_SCOPES
+from milasdk.exceptions import OAuthError
 
 LOG = logging.getLogger(__name__)
 
@@ -44,12 +45,15 @@ class MilaOauth2:
 
     async def async_refresh_token(self) -> dict[str, str | int]:
         """Refresh and return new token."""
-        token = await self._oauth.refresh_token(AUTH_OIDC_TOKEN_ENDPOINT, **self.extra)
+        try:
+            token = await self._oauth.refresh_token(AUTH_OIDC_TOKEN_ENDPOINT, **self.extra)
 
-        if self.token_updater is not None:
-            self.token_updater(token)
+            if self.token_updater is not None:
+                self.token_updater(token)
 
-        return token
+            return token
+        except Exception as ex:
+            raise OAuthError(f"Refresh token failure: {ex}") from ex        
 
     async def async_request_token(
         self,
@@ -62,12 +66,15 @@ class MilaOauth2:
         :param password: Your Milacares password
         :return: A token dict
         """
-        return await self._oauth.fetch_token(
-            AUTH_OIDC_TOKEN_ENDPOINT,
-            username=username,
-            password=password,
-            include_client_id=True,
-        )
+        try:
+            return await self._oauth.fetch_token(
+                AUTH_OIDC_TOKEN_ENDPOINT,
+                username=username,
+                password=password,
+                include_client_id=True,
+            )
+        except Exception as ex:
+            raise OAuthError(f"Request token failure: {ex}") from ex
 
     @property
     def closed(self):

@@ -1,5 +1,5 @@
 
-class ApiError(Exception):
+class OAuthError(Exception):
     pass
 
 class MilaError(Exception):

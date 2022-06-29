@@ -39,5 +39,5 @@ setup(
     ],
     packages=find_namespace_packages(include=[base_package, f"{base_package}*"]),
     include_package_data=False,
-    install_requires=["aiohttp", "magicattr", "gql", "StrEnum"]
+    install_requires=["aiohttp", "magicattr", "gql", "StrEnum","oauthlib","async_oauthlib"]
 )
