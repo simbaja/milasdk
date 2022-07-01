@@ -4,6 +4,7 @@ from gql.utilities import update_schema_enum, update_schema_scalar
 from .enums import *
 from .queries import *
 from .scalars import *
+from .transport import AuthenticatedAIOHTTPTransport
 
 def register_enums(client: Client):
     update_schema_enum(client.schema, "ApplianceMode", ApplianceMode)

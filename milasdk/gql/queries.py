@@ -10,6 +10,7 @@ def appliance_fields_fragment(ds: DSLSchema):
             ds.Room.kind,
             ds.Room.name,
             ds.Room.size,
+            ds.Room.soundsConfig,
             ds.Room.bedtime.select(
                 ds.Bedtime.localStart,
                 ds.Bedtime.localEnd

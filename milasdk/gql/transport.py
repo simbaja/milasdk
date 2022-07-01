@@ -16,7 +16,7 @@ from gql.transport.exceptions import (
     TransportServerError,
 )
 
-from .auth import AbstractAsyncSession
+from ..auth import AbstractAsyncSession
 
 log = logging.getLogger(__name__)
 
@@ -152,7 +152,7 @@ class AuthenticatedAIOHTTPTransport(AsyncTransport):
                 payload["variables"] = variable_values
 
             if log.isEnabledFor(logging.INFO):
-                log.info(">>> %s", json.dumps(payload))
+                log.debug(">>> %s", json.dumps(payload))
 
             post_args = {"json": payload}
 
@@ -187,7 +187,7 @@ class AuthenticatedAIOHTTPTransport(AsyncTransport):
 
                 if log.isEnabledFor(logging.INFO):
                     result_text = await resp.text()
-                    log.info("<<< %s", result_text)
+                    log.debug("<<< %s", result_text)
 
             except Exception:
                 await raise_response_error(resp, "Not a JSON answer")

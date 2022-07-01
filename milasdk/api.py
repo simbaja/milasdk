@@ -22,7 +22,6 @@ from milasdk import (
 )
 
 from .gql import *
-from .transport import AuthenticatedAIOHTTPTransport
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -172,6 +171,12 @@ class MilaApi:
             DSLQuery(
                 ds.Query.owner.select(
                     ds.Owner.locations.select(
+                        ds.Location.id,
+                        ds.Location.environmentKind,
+                        ds.Location.homeKind,
+                        ds.Location.houseSize,
+                        ds.Location.houseAge,
+                        ds.Location.houseBedrooms,
                         ds.Location.outdoorStation.select(
                             ds.OutdoorStation.id,
                             ds.OutdoorStation.name,
