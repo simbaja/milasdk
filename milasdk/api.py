@@ -92,30 +92,13 @@ class MilaApi:
                         ds.Profile.email,
                         ds.Profile.firstName,
                         ds.Profile.lastName
-                    ),
-                    ds.Owner.locations.select(
-                        ds.Location.address.select(
-                            ds.LocationAddress.address,
-                            ds.LocationAddress.city,
-                            ds.LocationAddress.country,
-                            ds.LocationAddress.point.select(
-                                ds.LatLng.lat,
-                                ds.LatLng.lon
-                            )
-                        ),
-                        ds.Location.timezone,
-                        ds.Location.environmentKind,
-                        ds.Location.homeKind,
-                        ds.Location.houseSize,
-                        ds.Location.houseAge,
-                        ds.Location.houseBedrooms
                     )
                 )
             )
         )
         result = await self._execute(query)
 
-        return result["owner"]
+        return result["owner"]["profile"]
 
     async def get_appliances(self) -> Dict[str, Any]:
         """ Returns the information for all appliances """
@@ -164,19 +147,27 @@ class MilaApi:
         result = await self._execute(query)
         return result["owner"]["appliance"]["sensor"]
 
-    async def get_outdoor_data(self) -> Dict[str, Any]:
-        """ Returns information for outdoor air quality """
+    async def get_location_data(self) -> Dict[str, Any]:
+        """ Returns location details """
         ds = DSLSchema(self._client.schema)
         query = dsl_gql(
             DSLQuery(
                 ds.Query.owner.select(
                     ds.Owner.locations.select(
                         ds.Location.id,
+                        ds.Location.address.select(
+                            ds.LocationAddress.city,
+                            ds.LocationAddress.country,
+                            ds.LocationAddress.point.select(
+                                ds.LatLng.lat,
+                                ds.LatLng.lon
+                            )
+                        ),
                         ds.Location.environmentKind,
                         ds.Location.homeKind,
                         ds.Location.houseSize,
                         ds.Location.houseAge,
-                        ds.Location.houseBedrooms,
+                        ds.Location.houseBedrooms,                        
                         ds.Location.outdoorStation.select(
                             ds.OutdoorStation.id,
                             ds.OutdoorStation.name,
@@ -187,7 +178,8 @@ class MilaApi:
                             ds.OutdoorStation.sensor(kind=OutdoorStationSensorKind.Pm2_5).select(
                                 *outdoor_sensor_fields_fragment(ds)
                             )
-                        )
+                        ),
+                        ds.Location.timezone,                        
                     )
                 )                  
             )

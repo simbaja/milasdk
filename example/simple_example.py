@@ -18,7 +18,7 @@ async def update(api: MilaApi):
         #r = await api.get_appliance_sensor("device here", ApplianceSensorKind.Temperature)
         #r = await api.set_smart_mode("device here",SmartModeKind.ChildLock,True)
         print(r)
-        r = await api.get_outdoor_data()
+        r = await api.get_location_data()
         print(r)
 
 async def main():

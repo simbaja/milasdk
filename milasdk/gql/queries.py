@@ -59,7 +59,7 @@ def appliance_sensor_fields_fragment(ds: DSLSchema):
 def outdoor_sensor_fields_fragment(ds: DSLSchema):
     return (
         ds.OutdoorStationSensor.kind,
-        ds.OutdoorStationSensor.latest(precision={ "unit": "Hour", "value": "1" }).select(
+        ds.OutdoorStationSensor.latest(precision={ "unit": "Day", "value": "1" }).select(
             ds.InstantValue.instant,
             ds.InstantValue.value
         )
