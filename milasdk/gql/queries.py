@@ -1,7 +1,6 @@
 import datetime
 from gql.dsl import *
 
-from .types import AggregateWindowInput
 from .enums import ApplianceSensorKind, OutdoorStationSensorKind
 
 def appliance_fields_fragment(ds: DSLSchema):
