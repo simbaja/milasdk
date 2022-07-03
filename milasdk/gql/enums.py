@@ -84,13 +84,6 @@ class HouseSize(StrEnum):
 class OutdoorStationSensorKind(StrEnum):
   Pm2_5 = auto()
 
-class PollenIndex(StrEnum):
-  VeryHigh = auto()
-  High = auto()
-  Moderate = auto()
-  Low = auto()
-  NA = "None"
-
 class RoomKind(StrEnum):
   LivingRoom = auto()
   Kitchen = auto()
@@ -106,3 +99,9 @@ class SoundsConfig(StrEnum):
   Enabled = auto()
   DaytimeOnly = auto()
   Disabled = auto()
+
+class AggregateFunction(StrEnum):
+  Mean = auto()
+  Max = auto()
+  Min = auto()
+  Last = auto()

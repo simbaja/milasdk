@@ -88,8 +88,7 @@ class PollenStation:
     id: str
     name: str
     measured_at: datetime
-    trees: PollenIndex
-    weeds: PollenIndex
-    grass: PollenIndex
-    mold: PollenIndex
-
+    trees: str #PollenIndex, but has None, so doesn't map right
+    weeds: str #PollenIndex, but has None, so doesn't map right
+    grass: str #PollenIndex, but has None, so doesn't map right
+    mold: str #PollenIndex, but has None, so doesn't map right

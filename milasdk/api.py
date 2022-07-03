@@ -150,40 +150,7 @@ class MilaApi:
     async def get_location_data(self) -> Dict[str, Any]:
         """ Returns location details """
         ds = DSLSchema(self._client.schema)
-        query = dsl_gql(
-            DSLQuery(
-                ds.Query.owner.select(
-                    ds.Owner.locations.select(
-                        ds.Location.id,
-                        ds.Location.address.select(
-                            ds.LocationAddress.city,
-                            ds.LocationAddress.country,
-                            ds.LocationAddress.point.select(
-                                ds.LatLng.lat,
-                                ds.LatLng.lon
-                            )
-                        ),
-                        ds.Location.environmentKind,
-                        ds.Location.homeKind,
-                        ds.Location.houseSize,
-                        ds.Location.houseAge,
-                        ds.Location.houseBedrooms,                        
-                        ds.Location.outdoorStation.select(
-                            ds.OutdoorStation.id,
-                            ds.OutdoorStation.name,
-                            ds.OutdoorStation.point.select(
-                                ds.LatLng.lat,
-                                ds.LatLng.lon
-                            ),
-                            ds.OutdoorStation.sensor(kind=OutdoorStationSensorKind.Pm2_5).select(
-                                *outdoor_sensor_fields_fragment(ds)
-                            )
-                        ),
-                        ds.Location.timezone,                        
-                    )
-                )                  
-            )
-        )
+        query = dsl_gql(DSLQuery(location_fragment(ds)))
         result = await self._execute(query)
         return result["owner"]["locations"]
 
