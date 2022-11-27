@@ -20,6 +20,7 @@ from milasdk import (
     AbstractAsyncSession,
     MilaError
 )
+from milasdk.exceptions import OAuthError
 
 from .gql import *
 
@@ -52,17 +53,21 @@ class MilaApi:
     async def _execute(self, document: DocumentNode, variable_values: Optional[Dict[str,Any]] = None) -> ExecutionResult:
         """ Main function to call the Mila API over HTTPS """
         retry = 3
+        authError = 0
         response: ExecutionResult = None
         async with self._client as session:
             while retry:
+                retry -= 1
                 try:
                     return await session.execute(document, variable_values)
                 except TransportServerError as ex:
                     if ex.code == 429:    # Too Many Requests
                         wait_time = response.headers.get('Retry-After', API_DEFAULT_429_WAIT)
-                        _LOGGER.debug('HTTP Error 429 - Too Many Requests. Sleeping for %s seconds and will retry', API_DEFAULT_429_WAIT)
+                        _LOGGER.debug('HTTP Error 429 - Too Many Requests. Sleeping for %s seconds and will retry', wait_time)
                         await asyncio.sleep(int(wait_time)+1)
                     elif ex.code == 401 or ex.code >= 500: # Unauthorized or service error
+                        if ex.code == 401:
+                            authError += 1
                         # This is probably caused by an expired token so the next retry will get a new one automatically
                         _LOGGER.debug("API call returned error code=%d - %d retries left", ex.code, retry)
                     else:
@@ -77,7 +82,11 @@ class MilaApi:
                     _LOGGER.debug("Unknown error occurred", exc_info=ex)
                     if not retry:
                         raise MilaError("API call failed") from ex
-                retry -= 1
+
+        # if we have multiple auth errors, assume we have an issue so we can
+        # get a new token
+        if authError > 1:
+            raise OAuthError("Multiple auth errors, assuming auth token invalid")
 
         # all retries were exhausted without a valid response
         raise MilaError("Failed to get a valid response from Mila API service")
