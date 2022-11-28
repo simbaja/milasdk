@@ -78,6 +78,8 @@ class MilaApi:
                     raise MilaError("Transport reported query error") from ex
                 except GraphQLError as ex:
                     raise MilaError("Invalid query") from ex
+                except OAuthError:
+                    raise
                 except Exception as ex:                
                     _LOGGER.debug("Unknown error occurred", exc_info=ex)
                     if not retry:
