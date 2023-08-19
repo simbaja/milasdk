@@ -983,6 +983,7 @@ enum RoomKind {
   MainBedroom
   KidsBedroom
   GuestBedroom
+  Studio
 }
 
 type SafeguardAlert {
