@@ -94,6 +94,7 @@ class RoomKind(StrEnum):
   MainBedroom = auto()
   KidsBedroom = auto()
   GuestBedroom = auto()
+  Studio = auto()
 
 class SoundsConfig(StrEnum):
   Enabled = auto()
