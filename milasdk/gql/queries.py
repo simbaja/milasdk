@@ -40,7 +40,6 @@ def appliance_fields_fragment(ds: DSLSchema):
         ),
         ds.Appliance.filter.select(
             ds.ApplianceFilter.kind,
-            ds.ApplianceFilter.daysLeft,
             ds.ApplianceFilter.installedAt,
             ds.ApplianceFilter.calibratedAt
         ),

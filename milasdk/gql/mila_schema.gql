@@ -99,8 +99,6 @@ enum ApplianceSensorKind {
   Temperature
   Co2
   Co
-  PressureMax
-  LoadingMg
 }
 
 type ApplianceState {
