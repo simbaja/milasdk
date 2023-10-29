@@ -103,16 +103,16 @@ def location_fragment(ds: DSLSchema):
                 )
             ),
             ds.Location.pollenStation.select(
-                ds.PollenStation.name,
-                ds.PollenStation.aggregateWindow(input=window).select(
-                    ds.DailyPollenStatus.date,
-                    ds.DailyPollenStatus.status.select(
-                        ds.PollenStatus.trees,
-                        ds.PollenStatus.weeds,
-                        ds.PollenStatus.grass,
-                        ds.PollenStatus.mold
-                    )
-                )
+                ds.PollenStation.name #,
+                # ds.PollenStation.aggregateWindow(input=window).select(
+                #     ds.DailyPollenStatus.date,
+                #     ds.DailyPollenStatus.status.select(
+                #         ds.PollenStatus.trees,
+                #         ds.PollenStatus.weeds,
+                #         ds.PollenStatus.grass,
+                #         ds.PollenStatus.mold
+                #     )
+                # )
             ),
             ds.Location.timezone
         )
