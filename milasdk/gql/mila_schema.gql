@@ -99,8 +99,6 @@ enum ApplianceSensorKind {
   Temperature
   Co2
   Co
-  PressureMax
-  LoadingMg
 }
 
 type ApplianceState {
@@ -983,6 +981,7 @@ enum RoomKind {
   MainBedroom
   KidsBedroom
   GuestBedroom
+  Studio
 }
 
 type SafeguardAlert {

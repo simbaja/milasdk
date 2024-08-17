@@ -37,8 +37,6 @@ class ApplianceSensorKind(StrEnum):
   Temperature = auto()
   Co2 = auto()
   Co = auto()
-  PressureMax = auto()
-  LoadingMg = auto()
 
 class EnvironmentKind(StrEnum):
   Urban = auto()
@@ -94,6 +92,7 @@ class RoomKind(StrEnum):
   MainBedroom = auto()
   KidsBedroom = auto()
   GuestBedroom = auto()
+  Studio = auto()
 
 class SoundsConfig(StrEnum):
   Enabled = auto()
