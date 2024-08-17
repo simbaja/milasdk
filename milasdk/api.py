@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from graphql import DocumentNode, ExecutionResult
-from gql import Client
+from gql import Client, gql
 from gql.dsl import *
 from gql.transport.exceptions import (
     TransportQueryError,
@@ -226,4 +226,28 @@ class MilaApi:
                 ds.Room.id
             )
         )
-        result = await self._execute(dsl_gql(mutation))       
+        result = await self._execute(dsl_gql(mutation)) 
+        
+    async def introspection(self) -> Dict[str, Any]:
+        """ Retrieves the introspection schema of the GraphQL API """
+        introspection_query = gql("""
+        {
+          __schema {
+            types {
+              name
+              fields {
+                name
+                type {
+                  name
+                  kind
+                  ofType {
+                    name
+                  }
+                }
+              }
+            }
+          }
+        }
+        """) 
+        result = await self._execute(introspection_query)
+        return result
