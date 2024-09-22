@@ -28,16 +28,6 @@ def appliance_fields_fragment(ds: DSLSchema):
             ds.ApplianceState.modes,
             ds.ApplianceState.actualMode
         ),
-        ds.Appliance.smartModes.select(
-            ds.SmartModes.quiet.select(ds.QuietMode.isEnabled),
-            ds.SmartModes.housekeeper.select(ds.HousekeeperMode.isEnabled),
-            ds.SmartModes.quarantine.select(ds.QuarantineMode.isEnabled),
-            ds.SmartModes.sleep.select(ds.SleepMode.isEnabled),
-            ds.SmartModes.turndown.select(ds.TurndownMode.isEnabled),
-            ds.SmartModes.whitenoise.select(ds.WhitenoiseMode.isEnabled),
-            ds.SmartModes.powerSaver.select(ds.PowerSaverMode.isEnabled),
-            ds.SmartModes.childLock.select(ds.ChildLockMode.isEnabled)
-        ),
         ds.Appliance.filter.select(
             ds.ApplianceFilter.kind,
             ds.ApplianceFilter.installedAt,
