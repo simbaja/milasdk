@@ -1,6 +1,6 @@
 """Mila SDK"""
 
-__version__ = "2026.1.0"
+__version__ = "2026.1.1"
 
 from .const import *
 from .exceptions import *
