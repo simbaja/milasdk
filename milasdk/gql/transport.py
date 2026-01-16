@@ -1,7 +1,7 @@
 import io
 import json
 import logging
-from typing import Any, AsyncGenerator, Dict, Optional, Tuple, Type
+from typing import Any, AsyncGenerator, Dict, Optional, Tuple, Type, NoReturn
 
 import aiohttp
 from aiohttp.client_exceptions import ClientResponseError
@@ -36,7 +36,7 @@ class AuthenticatedAIOHTTPTransport(AsyncTransport):
     def __init__(
         self,
         url: str,
-        session: AbstractAsyncSession = None
+        session: Optional[AbstractAsyncSession] = None
     ) -> None:
         """Initialize the transport with the given aiohttp parameters.
 
@@ -45,8 +45,8 @@ class AuthenticatedAIOHTTPTransport(AsyncTransport):
 
         """
         self.url: str = url
-        self.session: AbstractAsyncSession = session
-        self.response_headers: Optional[CIMultiDictProxy[str]]
+        self.session: AbstractAsyncSession | None = session
+        self.response_headers: CIMultiDictProxy[str] | None
 
     async def connect(self) -> None:
         """Coroutine which will create an aiohttp ClientSession() as self.session.
@@ -73,7 +73,7 @@ class AuthenticatedAIOHTTPTransport(AsyncTransport):
         document: DocumentNode,
         variable_values: Optional[Dict[str, Any]] = None,
         operation_name: Optional[str] = None,
-        extra_args: Dict[str, Any] = None,
+        extra_args: Optional[Dict[str, Any]] = None,
         upload_files: bool = False,
     ) -> ExecutionResult:
         """Execute the provided document AST against the configured remote server
@@ -165,7 +165,7 @@ class AuthenticatedAIOHTTPTransport(AsyncTransport):
 
         async with await self.session.post(self.url, **post_args) as resp:
 
-            async def raise_response_error(resp: aiohttp.ClientResponse, reason: str):
+            async def raise_response_error(resp: aiohttp.ClientResponse, reason: str) -> NoReturn:
                 # We raise a TransportServerError if the status code is 400 or higher
                 # We raise a TransportProtocolError in the other cases
 

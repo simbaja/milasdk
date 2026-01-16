@@ -49,12 +49,13 @@ class MilaApi:
         register_scalers(c)
 
         return c
-
-    async def _execute(self, document: DocumentNode, variable_values: Optional[Dict[str,Any]] = None) -> ExecutionResult:
+    async def _execute(self, document: DocumentNode, variable_values: Optional[Dict[str,Any]] = None) -> Dict[str,Any]:
         """ Main function to call the Mila API over HTTPS """
         retry = 3
         authError = 0
-        response: ExecutionResult = None
+        
+        # Removed 'response' variable as it was unused and caused the None-access error
+        
         async with self._client as session:
             while retry:
                 retry -= 1
@@ -62,10 +63,10 @@ class MilaApi:
                     return await session.execute(document, variable_values)
                 except TransportServerError as ex:
                     if ex.code == 429:    # Too Many Requests
-                        wait_time = response.headers.get('Retry-After', API_DEFAULT_429_WAIT)
+                        wait_time = API_DEFAULT_429_WAIT
                         _LOGGER.debug('HTTP Error 429 - Too Many Requests. Sleeping for %s seconds and will retry', wait_time)
                         await asyncio.sleep(int(wait_time)+1)
-                    elif ex.code == 401 or ex.code >= 500: # Unauthorized or service error
+                    elif ex.code == 401 or (ex.code is not None and ex.code >= 500): # Unauthorized or service error
                         if ex.code == 401:
                             authError += 1
                         # This is probably caused by an expired token so the next retry will get a new one automatically
@@ -80,7 +81,7 @@ class MilaApi:
                     raise MilaError("Invalid query") from ex
                 except OAuthError:
                     raise
-                except Exception as ex:                
+                except Exception as ex:                 
                     _LOGGER.debug("Unknown error occurred", exc_info=ex)
                     if not retry:
                         raise MilaError("API call failed") from ex
@@ -95,7 +96,10 @@ class MilaApi:
 
     async def get_account(self) -> Dict[str, Any]:
         """ Returns the account information (account, home, etc) """
+
+        assert self._client.schema is not None
         ds = DSLSchema(self._client.schema)
+        
         query = dsl_gql(
             DSLQuery(
                 ds.Query.owner.select(
@@ -108,11 +112,12 @@ class MilaApi:
             )
         )
         result = await self._execute(query)
-
         return result["owner"]["profile"]
 
     async def get_appliances(self) -> Dict[str, Any]:
         """ Returns the information for all appliances """
+
+        assert self._client.schema is not None
         ds = DSLSchema(self._client.schema)
         query = dsl_gql(
             DSLQuery(
@@ -128,6 +133,8 @@ class MilaApi:
 
     async def get_appliance(self, device_id: str) -> Dict[str, Any]:
         """ Returns information for the selected appliance """
+
+        assert self._client.schema is not None
         ds = DSLSchema(self._client.schema)
         query = dsl_gql(
             DSLQuery(
@@ -143,6 +150,8 @@ class MilaApi:
 
     async def get_appliance_sensor(self, device_id: str, sensor_kind: ApplianceSensorKind) -> Dict[str, Any]:
         """ Returns information for the selected appliance """
+
+        assert self._client.schema is not None
         ds = DSLSchema(self._client.schema)
         query = dsl_gql(
             DSLQuery(
@@ -160,14 +169,19 @@ class MilaApi:
 
     async def get_location_data(self) -> Dict[str, Any]:
         """ Returns location details """
+        assert self._client.schema is not None
         ds = DSLSchema(self._client.schema)
+
         query = dsl_gql(DSLQuery(location_fragment(ds)))
         result = await self._execute(query)
         return result["owner"]["locations"]
 
     async def set_smart_mode(self, device_id: str, mode: SmartModeKind, is_enabled: bool) -> Dict[str, Any]:
+
+        assert self._client.schema is not None
         ds = DSLSchema(self._client.schema)
-        name: DSLField = None
+
+        name: DSLField | None = None
         if mode == SmartModeKind.Sleep:
             name = ds.Mutation.applySleepMode(applianceId=device_id,isEnabled=is_enabled,fanMode=FanMode.Lowest)
         elif mode == SmartModeKind.Turndown:
@@ -187,10 +201,11 @@ class MilaApi:
 
         mutation = DSLMutation(name.select(*appliance_fields_fragment(ds)))
         result = await self._execute(dsl_gql(mutation))
-
         return list(result.values())[0]
 
     async def set_sound_mode(self, device_id: str, mode: SoundsConfig) -> Dict[str, Any]:
+
+        assert self._client.schema is not None
         ds = DSLSchema(self._client.schema)
         mutation = DSLMutation(
             ds.Mutation.applySoundsConfig(applianceId=device_id, soundsConfig=mode).select(
@@ -198,10 +213,11 @@ class MilaApi:
             )
         )
         result = await self._execute(dsl_gql(mutation))
-
         return list(result.values())[0]
 
     async def set_automagic_mode(self, room_id: int) -> None:
+
+        assert self._client.schema is not None
         ds = DSLSchema(self._client.schema)
         mutation = DSLMutation(
             ds.Mutation.applyRoomAutomagicMode(roomId=room_id).select(
@@ -211,6 +227,8 @@ class MilaApi:
         result = await self._execute(dsl_gql(mutation))
 
     async def set_manual_mode(self, room_id: int, fan_speed: int, target_aqi: int = 10) -> None:
+
+        assert self._client.schema is not None
         ds = DSLSchema(self._client.schema)
         mutation = DSLMutation(
             ds.Mutation.applyRoomManualMode(roomId=room_id,fanSpeed=fan_speed,targetAqi=target_aqi).select(
@@ -220,10 +238,12 @@ class MilaApi:
         result = await self._execute(dsl_gql(mutation))
 
     async def force_room_data(self, room_id: int) -> None:
+
+        assert self._client.schema is not None
         ds = DSLSchema(self._client.schema)
         mutation = DSLMutation(
             ds.Mutation.forceRoomData(roomId=room_id).select(
                 ds.Room.id
             )
         )
-        result = await self._execute(dsl_gql(mutation))       
+        result = await self._execute(dsl_gql(mutation))

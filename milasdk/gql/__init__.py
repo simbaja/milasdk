@@ -6,7 +6,13 @@ from .queries import *
 from .scalars import *
 from .transport import AuthenticatedAIOHTTPTransport
 
+_LOGGER = logging.getLogger(__name__)
+
 def register_enums(client: Client):
+    if not client.schema:
+        _LOGGER.warning("Client schema is None; skipping enum registration.")
+        return
+
     update_schema_enum(client.schema, "ApplianceMode", ApplianceMode)
     update_schema_enum(client.schema, "ApplianceSensorKind", ApplianceSensorKind)
     update_schema_enum(client.schema, "EnvironmentKind", EnvironmentKind)
@@ -21,5 +27,9 @@ def register_enums(client: Client):
     update_schema_enum(client.schema, "SoundsConfig", SoundsConfig)
 
 def register_scalers(client: Client):
+    if not client.schema:
+        _LOGGER.warning("Client schema is None; skipping scalar registration.")
+        return
+
     update_schema_scalar(client.schema, "Date", DateScalar)
     update_schema_scalar(client.schema, "EpochSecond", EpochSecondScalar)

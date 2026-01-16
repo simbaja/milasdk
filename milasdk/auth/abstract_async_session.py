@@ -36,8 +36,6 @@ class AbstractAsyncSession(ABC):
             raise MilaError(f"Access token failure: {err}") from err
         headers = {AUTH_HEADER: f"Bearer {access_token}"}
 
-        resp : ClientResponse = None
-
         return await self._session.post(
             url,
             headers=headers,

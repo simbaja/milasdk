@@ -3,7 +3,7 @@
 from __future__ import annotations
 import logging
 from types import TracebackType
-from typing import Callable, Optional, Type
+from typing import Callable, Optional, Type, Any, cast
 
 from oauthlib.oauth2 import LegacyApplicationClient
 from async_oauthlib import OAuth2Session
@@ -22,7 +22,7 @@ class MilaOauth2:
     def __init__(
         self,
         token: dict[str, str] | None = None,
-        token_updater: Callable[[str], None] | None = None,
+        token_updater: Callable[[dict], None] | None = None,
     ) -> None:
         """Initialize self.
         Keyword Arguments:
@@ -46,7 +46,7 @@ class MilaOauth2:
     async def async_refresh_token(self) -> dict[str, str | int]:
         """Refresh and return new token."""
         try:
-            token = await self._oauth.refresh_token(AUTH_OIDC_TOKEN_ENDPOINT, **self.extra)
+            token = await self._oauth.refresh_token(AUTH_OIDC_TOKEN_ENDPOINT, **cast(dict[str, Any], self.extra))
 
             if self.token_updater is not None:
                 self.token_updater(token)

@@ -2,7 +2,7 @@ import pathlib
 from setuptools import setup, find_namespace_packages
 
 try:
-    import re2 as re
+    import re2 as re # type: ignore
 except ImportError:
     import re
 
@@ -35,7 +35,7 @@ setup(
     classifiers=[
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.12",
     ],
     packages=find_namespace_packages(include=[base_package, f"{base_package}*"]),
     package_data={'': ['*.gql']},

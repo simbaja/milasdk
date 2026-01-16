@@ -13,6 +13,7 @@ from milasdk.gql import ApplianceSensorKind, SmartModeKind
 _LOGGER = logging.getLogger(__name__)
 
 async def update(api: MilaApi):
+    try:
         r = await api.get_appliances()
         #r = await api.get_appliance("device here")
         #r = await api.get_appliance_sensor("device here", ApplianceSensorKind.Temperature)
@@ -20,17 +21,25 @@ async def update(api: MilaApi):
         print(r)
         r = await api.get_location_data()
         print(r)
+    except Exception as e:
+        _LOGGER.error(f"Error during update: {e}")
 
 async def main():
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)-15s %(levelname)-8s %(message)s')
 
-    #create the authenticated session
-    async with DefaultAsyncSession(aiohttp.ClientSession(), USERNAME, PASSWORD) as session:
-        api = MilaApi(session)
+    async with aiohttp.ClientSession() as client_session:
+        #create the authenticated session
+        async with DefaultAsyncSession(aiohttp.ClientSession(), USERNAME, PASSWORD) as session:
+            api = MilaApi(session)
 
-        while True:
-            await update(api)
-            await asyncio.sleep(60)
+            while True:
+                await update(api)
+                await asyncio.sleep(60)
 
-loop = asyncio.get_event_loop()
-loop.run_until_complete(main())
+if __name__ == "__main__":
+    try:
+        # This creates a new event loop and closes it properly when done
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        # Handle Ctrl+C gracefully
+        pass

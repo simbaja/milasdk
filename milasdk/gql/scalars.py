@@ -28,7 +28,7 @@ DateScalar = GraphQLScalarType(
 # EpochSecond: The unix time stamp. The number of seconds between a particular instant and the Unix Epoch of 1970-01-01T00:00:00Z.
 
 def serialize_epoch(value: Any) -> str:
-    return int(round(value.timestamp()))
+    return str(int(round(value.timestamp())))
 
 def parse_epoch_value(value: Any) -> datetime:
     return datetime.fromtimestamp(value)
