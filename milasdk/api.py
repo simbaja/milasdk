@@ -4,6 +4,7 @@ import asyncio
 import logging
 from pathlib import Path
 from typing import Any, Dict, Optional
+import aiofiles
 
 from graphql import DocumentNode, ExecutionResult
 from gql import Client
@@ -32,11 +33,11 @@ class MilaApi:
     def __init__(self, session: AbstractAsyncSession) -> None:
         self._session = session
         self._transport = AuthenticatedAIOHTTPTransport(API_BASE_URL, session)
-        self._client = self._setup_client()
+        self._client: Client | None = None
 
-    def _setup_client(self) -> Client:
-        with open(Path(__file__).parent / './gql/mila_schema.gql') as f:
-            schema_str = f.read()
+    async def _get_client(self) -> Client:
+        async with aiofiles.open(Path(__file__).parent / './gql/mila_schema.gql', mode='r') as f:
+            schema_str = await f.read()
 
         c = Client(
             schema=schema_str,
@@ -49,14 +50,24 @@ class MilaApi:
         register_scalers(c)
 
         return c
+
+    @property
+    async def client(self) -> Client:
+        if not self._client:
+            self._client = await self._get_client()
+        return self._client
+
+    async def _get_dsl_schema(self) -> DSLSchema:
+        client = await self.client
+        assert client.schema is not None
+        return DSLSchema(client.schema)
+
     async def _execute(self, document: DocumentNode, variable_values: Optional[Dict[str,Any]] = None) -> Dict[str,Any]:
         """ Main function to call the Mila API over HTTPS """
         retry = 3
         authError = 0
         
-        # Removed 'response' variable as it was unused and caused the None-access error
-        
-        async with self._client as session:
+        async with await self.client as session:
             while retry:
                 retry -= 1
                 try:
@@ -97,8 +108,7 @@ class MilaApi:
     async def get_account(self) -> Dict[str, Any]:
         """ Returns the account information (account, home, etc) """
 
-        assert self._client.schema is not None
-        ds = DSLSchema(self._client.schema)
+        ds = await self._get_dsl_schema()
         
         query = dsl_gql(
             DSLQuery(
@@ -117,8 +127,8 @@ class MilaApi:
     async def get_appliances(self) -> Dict[str, Any]:
         """ Returns the information for all appliances """
 
-        assert self._client.schema is not None
-        ds = DSLSchema(self._client.schema)
+        ds = await self._get_dsl_schema()
+
         query = dsl_gql(
             DSLQuery(
                 ds.Query.owner.select(
@@ -134,8 +144,8 @@ class MilaApi:
     async def get_appliance(self, device_id: str) -> Dict[str, Any]:
         """ Returns information for the selected appliance """
 
-        assert self._client.schema is not None
-        ds = DSLSchema(self._client.schema)
+        ds = await self._get_dsl_schema()
+
         query = dsl_gql(
             DSLQuery(
                 ds.Query.owner.select(
@@ -151,8 +161,8 @@ class MilaApi:
     async def get_appliance_sensor(self, device_id: str, sensor_kind: ApplianceSensorKind) -> Dict[str, Any]:
         """ Returns information for the selected appliance """
 
-        assert self._client.schema is not None
-        ds = DSLSchema(self._client.schema)
+        ds = await self._get_dsl_schema()
+
         query = dsl_gql(
             DSLQuery(
                 ds.Query.owner.select(
@@ -169,8 +179,8 @@ class MilaApi:
 
     async def get_location_data(self) -> Dict[str, Any]:
         """ Returns location details """
-        assert self._client.schema is not None
-        ds = DSLSchema(self._client.schema)
+
+        ds = await self._get_dsl_schema()
 
         query = dsl_gql(DSLQuery(location_fragment(ds)))
         result = await self._execute(query)
@@ -178,8 +188,7 @@ class MilaApi:
 
     async def set_smart_mode(self, device_id: str, mode: SmartModeKind, is_enabled: bool) -> Dict[str, Any]:
 
-        assert self._client.schema is not None
-        ds = DSLSchema(self._client.schema)
+        ds = await self._get_dsl_schema()
 
         name: DSLField | None = None
         if mode == SmartModeKind.Sleep:
@@ -205,8 +214,8 @@ class MilaApi:
 
     async def set_sound_mode(self, device_id: str, mode: SoundsConfig) -> Dict[str, Any]:
 
-        assert self._client.schema is not None
-        ds = DSLSchema(self._client.schema)
+        ds = await self._get_dsl_schema()
+
         mutation = DSLMutation(
             ds.Mutation.applySoundsConfig(applianceId=device_id, soundsConfig=mode).select(
                 *appliance_fields_fragment(ds)
@@ -217,8 +226,8 @@ class MilaApi:
 
     async def set_automagic_mode(self, room_id: int) -> None:
 
-        assert self._client.schema is not None
-        ds = DSLSchema(self._client.schema)
+        ds = await self._get_dsl_schema()
+
         mutation = DSLMutation(
             ds.Mutation.applyRoomAutomagicMode(roomId=room_id).select(
                 ds.Room.id
@@ -228,8 +237,8 @@ class MilaApi:
 
     async def set_manual_mode(self, room_id: int, fan_speed: int, target_aqi: int = 10) -> None:
 
-        assert self._client.schema is not None
-        ds = DSLSchema(self._client.schema)
+        ds = await self._get_dsl_schema()
+
         mutation = DSLMutation(
             ds.Mutation.applyRoomManualMode(roomId=room_id,fanSpeed=fan_speed,targetAqi=target_aqi).select(
                 ds.Room.id
@@ -239,8 +248,8 @@ class MilaApi:
 
     async def force_room_data(self, room_id: int) -> None:
 
-        assert self._client.schema is not None
-        ds = DSLSchema(self._client.schema)
+        ds = await self._get_dsl_schema()
+        
         mutation = DSLMutation(
             ds.Mutation.forceRoomData(roomId=room_id).select(
                 ds.Room.id

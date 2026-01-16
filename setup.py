@@ -40,5 +40,5 @@ setup(
     packages=find_namespace_packages(include=[base_package, f"{base_package}*"]),
     package_data={'': ['*.gql']},
     include_package_data=True,
-    install_requires=["aiohttp", "magicattr", "gql<4", "StrEnum","oauthlib","async_oauthlib"]
+    install_requires=["aiohttp", "magicattr", "gql<4", "StrEnum","oauthlib","async_oauthlib", "aiofiles"]
 )
