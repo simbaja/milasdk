@@ -5,6 +5,7 @@ import logging
 from types import TracebackType
 from typing import Callable, Optional, Type, Any, cast
 
+from aiohttp import BaseConnector
 from oauthlib.oauth2 import LegacyApplicationClient
 from async_oauthlib import OAuth2Session
 from milasdk.const import AUTH_CLIENT_ID, AUTH_OIDC_TOKEN_ENDPOINT, AUTH_SCOPES
@@ -23,12 +24,15 @@ class MilaOauth2:
         self,
         token: dict[str, str] | None = None,
         token_updater: Callable[[dict], None] | None = None,
+        connector: BaseConnector | None = None,
+        connector_owner: bool = False,
     ) -> None:
         """Initialize self.
         Keyword Arguments:
             token {Optional[Dict[str, str]]} -- Authorization token (default: {None})
             token_updater {Optional[Callable[[str], None]]} -- Callback when the token is updated (default: {None})
-            scope {Optional[str]} -- List of scopes (default: "email profile")
+            connector {Optional[BaseConnector]} -- Optional aiohttp connector to share connection pool (default: {None})
+            connector_owner {bool} -- If True, close the connector when session closes (default: {False})
         """
         self.client_id = AUTH_CLIENT_ID
         self.scope = AUTH_SCOPES
@@ -40,7 +44,9 @@ class MilaOauth2:
             client = LegacyApplicationClient(self.client_id),
             token=token,
             token_updater=self.token_updater,
-            scope=self.scope
+            scope=self.scope,
+            connector=connector,
+            connector_owner=connector_owner,
         )
 
     async def async_refresh_token(self) -> dict[str, str | int]:
