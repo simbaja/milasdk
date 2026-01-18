@@ -7,5 +7,5 @@ AUTH_CLIENT_ID = "prod-ui"
 AUTH_SCOPES = "email profile"
 AUTH_HEADER = "Authorization"
 
-API_BASE_URL = "https://api.milacares.com/graphql"
+API_BASE_URL = "https://graph-api.milacares.com/graphql"
 API_DEFAULT_429_WAIT = 30
