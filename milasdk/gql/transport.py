@@ -1,7 +1,6 @@
-import io
 import json
 import logging
-from typing import Any, AsyncGenerator, Dict, Optional, Tuple, Type, NoReturn
+from typing import Any, AsyncGenerator, Dict, Optional, Union, NoReturn
 
 import aiohttp
 from aiohttp.client_exceptions import ClientResponseError
@@ -9,7 +8,13 @@ from graphql import DocumentNode, ExecutionResult, print_ast
 from multidict import CIMultiDictProxy
 
 from gql.transport import AsyncTransport
-from gql.utils import extract_files
+
+from .compat import GQL_V4
+
+if GQL_V4:  # gql >= 4 passes a GraphQLRequest to the transport
+    from gql import GraphQLRequest
+else:  # gql 3.x passes the document and variables separately
+    GraphQLRequest = None
 from gql.transport.exceptions import (
     TransportClosed,
     TransportProtocolError,
@@ -26,12 +31,6 @@ class AuthenticatedAIOHTTPTransport(AsyncTransport):
 
     This transport use the aiohttp library with asyncio.
     """
-
-    file_classes: Tuple[Type[Any], ...] = (
-        io.IOBase,
-        aiohttp.StreamReader,
-        AsyncGenerator,
-    )
 
     def __init__(
         self,
@@ -70,27 +69,39 @@ class AuthenticatedAIOHTTPTransport(AsyncTransport):
 
     async def execute(
         self,
-        document: DocumentNode,
+        request: Union["GraphQLRequest", DocumentNode],
         variable_values: Optional[Dict[str, Any]] = None,
         operation_name: Optional[str] = None,
         extra_args: Optional[Dict[str, Any]] = None,
         upload_files: bool = False,
+        **kwargs: Any,
     ) -> ExecutionResult:
-        """Execute the provided document AST against the configured remote server
-        using the current session.
-        This uses the aiohttp library to perform a HTTP POST request asynchronously
-        to the remote server.
+        """Execute the provided request against the configured remote server
+        using the current authenticated session.
+
+        Supports both gql 4 (a GraphQLRequest) and gql 3 (a DocumentNode plus
+        variable_values / operation_name).
 
         Don't call this coroutine directly on the transport, instead use
         :code:`execute` on a client or a session.
 
-        :param document: the parsed GraphQL request
-        :param variable_values: An optional Dict of variable values
-        :param operation_name: An optional Operation name for the request
+        :param request: a GraphQLRequest (gql 4) or parsed DocumentNode (gql 3)
+        :param variable_values: gql 3 only: an optional Dict of variable values
+        :param operation_name: gql 3 only: an optional Operation name
         :param extra_args: additional arguments to send to the aiohttp post method
-        :param upload_files: Set to True if you want to put files in the variable values
+        :param upload_files: file uploads are not supported by the Mila API
         :returns: an ExecutionResult object.
         """
+
+        if GraphQLRequest is not None and isinstance(request, GraphQLRequest):
+            document = request.document
+            variable_values = request.variable_values
+            operation_name = request.operation_name
+        else:
+            document = request
+
+        if upload_files:
+            raise NotImplementedError("File uploads are not supported by this transport")
 
         query_str = print_ast(document)
 
@@ -101,60 +112,13 @@ class AuthenticatedAIOHTTPTransport(AsyncTransport):
         if operation_name:
             payload["operationName"] = operation_name
 
-        if upload_files:
+        if variable_values:
+            payload["variables"] = variable_values
 
-            # If the upload_files flag is set, then we need variable_values
-            assert variable_values is not None
+        if log.isEnabledFor(logging.DEBUG):
+            log.debug(">>> %s", json.dumps(payload))
 
-            # If we upload files, we will extract the files present in the
-            # variable_values dict and replace them by null values
-            nulled_variable_values, files = extract_files(
-                variables=variable_values,
-                file_classes=self.file_classes,
-            )
-
-            # Save the nulled variable values in the payload
-            payload["variables"] = nulled_variable_values
-
-            # Prepare aiohttp to send multipart-encoded data
-            data = aiohttp.FormData()
-
-            # Generate the file map
-            # path is nested in a list because the spec allows multiple pointers
-            # to the same file. But we don't support that.
-            # Will generate something like {"0": ["variables.file"]}
-            file_map = {str(i): [path] for i, path in enumerate(files)}
-
-            # Enumerate the file streams
-            # Will generate something like {'0': <_io.BufferedReader ...>}
-            file_streams = {str(i): files[path] for i, path in enumerate(files)}
-
-            # Add the payload to the operations field
-            operations_str = json.dumps(payload)
-            log.debug("operations %s", operations_str)
-            data.add_field(
-                "operations", operations_str, content_type="application/json"
-            )
-
-            # Add the file map field
-            file_map_str = json.dumps(file_map)
-            log.debug("file_map %s", file_map_str)
-            data.add_field("map", file_map_str, content_type="application/json")
-
-            # Add the extracted files as remaining fields
-            for k, v in file_streams.items():
-                data.add_field(k, v, filename=getattr(v, "name", k))
-
-            post_args: Dict[str, Any] = {"data": data}
-
-        else:
-            if variable_values:
-                payload["variables"] = variable_values
-
-            if log.isEnabledFor(logging.INFO):
-                log.debug(">>> %s", json.dumps(payload))
-
-            post_args = {"json": payload}
+        post_args: Dict[str, Any] = {"json": payload}
 
         # Pass post_args to aiohttp post method
         if extra_args:
@@ -206,9 +170,9 @@ class AuthenticatedAIOHTTPTransport(AsyncTransport):
 
     def subscribe(
         self,
-        document: DocumentNode,
-        variable_values: Optional[Dict[str, Any]] = None,
-        operation_name: Optional[str] = None,
+        request: Union["GraphQLRequest", DocumentNode],
+        *args: Any,
+        **kwargs: Any,
     ) -> AsyncGenerator[ExecutionResult, None]:
         """Subscribe is not supported on HTTP.
 
