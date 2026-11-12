@@ -594,6 +594,10 @@ type MonthlyVocAlert {
 }
 
 type Mutation {
+  applyRoomSoundsConfig(
+    roomId: ID!
+    soundsConfig: SoundsConfig!
+  ): Room!
   applySoundsConfig(
     applianceId: MacAddress!
     soundsConfig: SoundsConfig!
