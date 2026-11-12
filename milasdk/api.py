@@ -3,7 +3,7 @@
 import asyncio
 import logging
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 import aiofiles
 
 from graphql import DocumentNode, ExecutionResult
@@ -212,7 +212,27 @@ class MilaApi:
         result = await self._execute(dsl_gql(mutation))
         return list(result.values())[0]
 
-    async def set_sound_mode(self, device_id: str, mode: SoundsConfig) -> Dict[str, Any]:
+    async def set_room_sounds_config(self, room_id: Union[str, int], mode: SoundsConfig) -> Dict[str, Any]:
+
+        ds = await self._get_dsl_schema()
+
+        mutation = DSLMutation(
+            ds.Mutation.applyRoomSoundsConfig(roomId=str(room_id), soundsConfig=mode).select(
+                ds.Room.id,
+                ds.Room.soundsConfig
+            )
+        )
+        result = await self._execute(dsl_gql(mutation))
+        return list(result.values())[0]
+
+    async def set_sound_mode(self, device_id: Union[str, int], mode: SoundsConfig) -> Dict[str, Any]:
+        """Set sound mode.
+
+        Note: Mila's GraphQL API configures sound modes per room via applyRoomSoundsConfig.
+        If passed a room ID (int or numeric str), routes to set_room_sounds_config.
+        """
+        if isinstance(device_id, int) or (isinstance(device_id, str) and device_id.isdigit()):
+            return await self.set_room_sounds_config(device_id, mode)
 
         ds = await self._get_dsl_schema()
 
