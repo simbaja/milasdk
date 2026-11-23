@@ -8,6 +8,11 @@ import aiofiles
 
 from graphql import DocumentNode, ExecutionResult
 from gql import Client
+
+from .gql.compat import GQL_V4
+
+if GQL_V4:  # gql >= 4: execute() takes a GraphQLRequest; variables are keyword-only
+    from gql import GraphQLRequest
 from gql.dsl import *
 from gql.transport.exceptions import (
     TransportQueryError,
@@ -71,7 +76,11 @@ class MilaApi:
             while retry:
                 retry -= 1
                 try:
-                    return await session.execute(document, variable_values)
+                    if GQL_V4:
+                        return await session.execute(
+                            GraphQLRequest(document, variable_values=variable_values)
+                        )
+                    return await session.execute(document, variable_values=variable_values)
                 except TransportServerError as ex:
                     if ex.code == 429:    # Too Many Requests
                         wait_time = API_DEFAULT_429_WAIT
