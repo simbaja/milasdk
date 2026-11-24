@@ -7,14 +7,8 @@ from aiohttp.client_exceptions import ClientResponseError
 from graphql import DocumentNode, ExecutionResult, print_ast
 from multidict import CIMultiDictProxy
 
+from gql import GraphQLRequest
 from gql.transport import AsyncTransport
-
-from .compat import GQL_V4
-
-if GQL_V4:  # gql >= 4 passes a GraphQLRequest to the transport
-    from gql import GraphQLRequest
-else:  # gql 3.x passes the document and variables separately
-    GraphQLRequest = None
 from gql.transport.exceptions import (
     TransportClosed,
     TransportProtocolError,
@@ -93,7 +87,7 @@ class AuthenticatedAIOHTTPTransport(AsyncTransport):
         :returns: an ExecutionResult object.
         """
 
-        if GraphQLRequest is not None and isinstance(request, GraphQLRequest):
+        if isinstance(request, GraphQLRequest):
             document = request.document
             variable_values = request.variable_values
             operation_name = request.operation_name

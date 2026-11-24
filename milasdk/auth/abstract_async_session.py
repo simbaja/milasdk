@@ -27,7 +27,7 @@ class AbstractAsyncSession(ABC):
         self,
         url: str,
         data: Any = None,
-        **kwargs
+        **kwargs: Any
     ) -> ClientResponse:
         """Wrapper for authenticated post requests."""
         try:

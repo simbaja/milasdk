@@ -1,3 +1,5 @@
+import logging
+
 from gql import Client
 from gql.utilities import update_schema_enum, update_schema_scalar
 

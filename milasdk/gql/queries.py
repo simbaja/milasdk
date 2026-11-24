@@ -1,5 +1,5 @@
 import datetime
-from gql.dsl import *
+from gql.dsl import DSLSchema
 
 from .enums import ApplianceSensorKind, OutdoorStationSensorKind
 
@@ -52,18 +52,18 @@ def location_fragment(ds: DSLSchema):
     #I'm taking a guess here - there appear to be gaps in the pollen data
     #so, we can't just take today's value.  I'm taking the last value
     #for a given week, hopefully it works as expected
-    now = datetime.datetime.utcnow()
-    window = {
-        "range": {
-            "start": now - datetime.timedelta(days=6),
-            "stop": now
-        },
-        "every": {
-            "value": 7,
-            "unit": "Day"
-        },
-        "fn": "Last"
-    }
+    # now = datetime.datetime.now(datetime.timezone.utc)
+    # window = {
+    #     "range": {
+    #         "start": now - datetime.timedelta(days=6),
+    #         "stop": now
+    #     },
+    #     "every": {
+    #         "value": 7,
+    #         "unit": "Day"
+    #     },
+    #     "fn": "Last"
+    # }
 
     return ds.Query.owner.select(
         ds.Owner.locations.select(

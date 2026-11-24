@@ -6,27 +6,19 @@ from pathlib import Path
 from typing import Any, Dict, Optional, Union
 import aiofiles
 
-from graphql import DocumentNode, ExecutionResult
-from gql import Client
-
-from .gql.compat import GQL_V4
-
-if GQL_V4:  # gql >= 4: execute() takes a GraphQLRequest; variables are keyword-only
-    from gql import GraphQLRequest
-from gql.dsl import *
+from graphql import DocumentNode, GraphQLError
+from gql import Client, GraphQLRequest
+from gql.dsl import DSLField, DSLMutation, DSLQuery, DSLSchema, dsl_gql
 from gql.transport.exceptions import (
     TransportQueryError,
     TransportProtocolError,
     TransportServerError,
 )
 
-from milasdk import (
-    API_DEFAULT_429_WAIT,
-    API_BASE_URL,
-    AbstractAsyncSession,
-    MilaError
-)
-from milasdk.exceptions import OAuthError
+from .auth import AbstractAsyncSession
+from .const import API_BASE_URL, API_DEFAULT_429_WAIT
+from .exceptions import MilaError, OAuthError
+from .gql.compat import GQL_V4
 
 from .gql import *
 
@@ -67,7 +59,7 @@ class MilaApi:
         assert client.schema is not None
         return DSLSchema(client.schema)
 
-    async def _execute(self, document: DocumentNode, variable_values: Optional[Dict[str,Any]] = None) -> Dict[str,Any]:
+    async def _execute(self, document: Union[DocumentNode, GraphQLRequest], variable_values: Optional[Dict[str,Any]] = None) -> Dict[str,Any]:
         """ Main function to call the Mila API over HTTPS """
         retry = 3
         authError = 0
@@ -80,7 +72,7 @@ class MilaApi:
                         return await session.execute(
                             GraphQLRequest(document, variable_values=variable_values)
                         )
-                    return await session.execute(document, variable_values=variable_values)
+                    return await session.execute(document, variable_values=variable_values)  # type: ignore[arg-type]
                 except TransportServerError as ex:
                     if ex.code == 429:    # Too Many Requests
                         wait_time = API_DEFAULT_429_WAIT
@@ -240,7 +232,7 @@ class MilaApi:
         Note: Mila's GraphQL API configures sound modes per room via applyRoomSoundsConfig.
         If passed a room ID (int or numeric str), routes to set_room_sounds_config.
         """
-        if isinstance(device_id, int) or (isinstance(device_id, str) and device_id.isdigit()):
+        if isinstance(device_id, int) or device_id.isdigit():
             return await self.set_room_sounds_config(device_id, mode)
 
         ds = await self._get_dsl_schema()
@@ -262,7 +254,7 @@ class MilaApi:
                 ds.Room.id
             )
         )
-        result = await self._execute(dsl_gql(mutation))
+        await self._execute(dsl_gql(mutation))
 
     async def set_manual_mode(self, room_id: int, fan_speed: int, target_aqi: int = 10) -> None:
 
@@ -273,7 +265,7 @@ class MilaApi:
                 ds.Room.id
             )
         )
-        result = await self._execute(dsl_gql(mutation))
+        await self._execute(dsl_gql(mutation))
 
     async def force_room_data(self, room_id: int) -> None:
 
@@ -284,4 +276,4 @@ class MilaApi:
                 ds.Room.id
             )
         )
-        result = await self._execute(dsl_gql(mutation))
+        await self._execute(dsl_gql(mutation))
