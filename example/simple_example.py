@@ -29,7 +29,7 @@ async def main():
 
     async with aiohttp.ClientSession() as client_session:
         #create the authenticated session
-        async with DefaultAsyncSession(aiohttp.ClientSession(), USERNAME, PASSWORD) as session:
+        async with DefaultAsyncSession(client_session, USERNAME, PASSWORD) as session:
             api = MilaApi(session)
 
             while True:
